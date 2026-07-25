@@ -39,7 +39,7 @@ router.post("/upload", upload.single("image"), async (req: Request, res: Respons
     // 2. Ask Groq to analyze the hazard from the uploaded image URL
     const category = (req.body?.category as string) || "Civic Issue";
     const completion = await groq.chat.completions.create({
-      model: "qwen/qwen3.6-27b",
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "user",
@@ -54,14 +54,35 @@ router.post("/upload", upload.single("image"), async (req: Request, res: Respons
         },
       ],
       temperature: 0.3,
-      max_tokens: 500,
+      max_tokens: 2000,
     });
 
     const raw = completion.choices[0]?.message?.content || "{}";
-    const cleaned = raw
-  .replace(/<think>[\s\S]*?<\/think>/g, "")
-  .replace(/```json|```/g, "")
-  .trim();    const analysis: HazardAnalysis = JSON.parse(cleaned);
+
+    // Strip <think>...</think> reasoning blocks (handles both closed and
+    // unclosed tags — some reasoning models get cut off mid-thought if
+    // max_tokens is hit before they reach the actual JSON answer).
+    let cleaned = raw
+      .replace(/<think>[\s\S]*?<\/think>/g, "")
+      .replace(/<think>[\s\S]*/g, "")
+      .replace(/```json|```/g, "")
+      .trim();
+
+    // Fallback safety net: if any stray text remains before/after the JSON
+    // object, extract just the {...} portion.
+    const jsonStart = cleaned.indexOf("{");
+    const jsonEnd = cleaned.lastIndexOf("}");
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+
+    let analysis: HazardAnalysis;
+    try {
+      analysis = JSON.parse(cleaned);
+    } catch (parseErr) {
+      console.error("Failed to parse Groq JSON response. Raw content:", raw);
+      throw parseErr;
+    }
 
     const response: UploadAnalysisResponse = {
       success: true,
