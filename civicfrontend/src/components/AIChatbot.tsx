@@ -30,10 +30,7 @@ interface AIChatbotProps {
 // Base URL of the civicbackend Express server (single Groq backend, 7 role prompts).
 // Set VITE_BACKEND_URL (Vite) or NEXT_PUBLIC_BACKEND_URL (Next.js) in your frontend .env
 // to the deployed backend URL, e.g. https://civicbackend.onrender.com
-const BACKEND_URL =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_BACKEND_URL) ||
-  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BACKEND_URL) ||
-  "http://localhost:3001";
+const BACKEND_URL = "https://civic-iq-demo-final.onrender.com";
 
 // Maps this component's UI-facing "activeRole" to the backend's AI role/prompt.
 const ROLE_MAP: Record<NonNullable<AIChatbotProps["activeRole"]>, string> = {
