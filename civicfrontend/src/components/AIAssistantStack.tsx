@@ -18,7 +18,7 @@ import {
   VolumeX
 } from "lucide-react";
 import Markdown from "react-markdown";
-
+const API_BASE_URL = "https://civic-iq-demo-final.onrender.com";
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -28,7 +28,6 @@ interface Message {
 }
 
 export type ChatMode = "assistant" | "advisor";
-
 export default function AIAssistantStack() {
   const [activeMode, setActiveMode] = useState<ChatMode>("assistant");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -145,7 +144,7 @@ export default function AIAssistantStack() {
         .filter((m) => !m.id.startsWith("welcome") && !m.isError)
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/copilot/chat`, {
+      const response = await fetch(`${API_BASE_URL}/api/copilot/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -222,8 +221,8 @@ export default function AIAssistantStack() {
         .filter((m) => !m.id.startsWith("welcome") && !m.isError)
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/copilot/chat`, { 
-          method: "POST",
+const response = await fetch(`https://civic-iq-demo-final.onrender.com/api/copilot/chat`, {
+  method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: textToSend,
