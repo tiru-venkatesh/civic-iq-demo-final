@@ -100,7 +100,7 @@ export default function AdminLogin({ onLoginSuccess, onBackToHome }: AdminLoginP
               Official Municipal Portal
             </h2>
             <p className="text-xs text-slate-500 font-medium mt-1">
-              Brihanmumbai Municipal Corporation (BMC) Administration
+              Mumbai Municipal Corporation (MMC) Administration
             </p>
           </div>
         </div>
@@ -171,7 +171,14 @@ export default function AdminLogin({ onLoginSuccess, onBackToHome }: AdminLoginP
               </button>
             </div>
           </div>
-
+          {/* Demo Credentials Hint */}
+<div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3.5 text-[11px] text-blue-800 leading-relaxed flex gap-2.5 items-start">
+  <Shield className="h-4.5 w-4.5 text-blue-600 shrink-0 mt-0.5" />
+  <div>
+    <span className="font-bold block text-[11.5px] text-blue-900 mb-0.5">DEMO CREDENTIALS</span>
+    Email: <span className="font-mono font-bold">officer@gmail.com</span> · Password: <span className="font-mono font-bold">officer</span>
+  </div>
+</div>
           {/* Action buttons */}
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <button
