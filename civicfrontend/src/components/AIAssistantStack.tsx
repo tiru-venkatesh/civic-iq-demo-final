@@ -145,7 +145,7 @@ export default function AIAssistantStack() {
         .filter((m) => !m.id.startsWith("welcome") && !m.isError)
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/copilot/chat`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/copilot/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -222,7 +222,7 @@ export default function AIAssistantStack() {
         .filter((m) => !m.id.startsWith("welcome") && !m.isError)
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/copilot/chat`, { 
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/copilot/chat`, { 
           method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
