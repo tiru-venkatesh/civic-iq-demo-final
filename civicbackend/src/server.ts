@@ -19,8 +19,7 @@ import uploadRoutes from "./routes/upload";
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
-const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
-  .split(",")
+const allowedOrigins = (process.env.CORS_ORIGIN || "civic-iq-demo-final.vercel.app")  .split(",")
   .map((o) => o.trim());
 
 app.use(
