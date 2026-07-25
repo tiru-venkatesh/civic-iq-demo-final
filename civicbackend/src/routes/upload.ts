@@ -39,7 +39,7 @@ router.post("/upload", upload.single("image"), async (req: Request, res: Respons
     // 2. Ask Groq to analyze the hazard from the uploaded image URL
     const category = (req.body?.category as string) || "Civic Issue";
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-11b-versatile",
+        model: "qwen/qwen3.6-27b",
       messages: [
         {
           role: "user",
