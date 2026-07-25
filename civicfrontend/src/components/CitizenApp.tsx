@@ -53,7 +53,7 @@ import { Complaint, AIAnalysis } from "../types";
 import SmartCityMap from "./SmartCityMap";
 import AnimatedCounter from "./AnimatedCounter";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://civic-iq-demo-final.onrender.com";
 // Predefined categories with friendly icons and descriptions
 const ISSUE_CATEGORIES = [
   {
@@ -593,32 +593,45 @@ const handleCustomFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   };
 
   // Toggle Voice Dictation
-  const handleToggleVoice = () => {
-    if (isRecording) {
-      if (recordingTimer.current) clearInterval(recordingTimer.current);
-      setIsRecording(false);
-      const text = "Large deep pothole right in front of the bus stop causing traffic delay and safety risk.";
-      setVoiceTranscript(text);
-      setReportDesc(prev => prev ? `${prev} ${text}` : text);
-      triggerAIEvaluation(reportTitle || selectedCategoryObj.name, text, selectedPhoto);
-    } else {
-      setIsRecording(true);
-      let count = 0;
-      recordingTimer.current = setInterval(() => {
-        setVoiceWave(Array.from({ length: 14 }, () => Math.floor(Math.random() * 40) + 10));
-        count++;
-        if (count > 20) {
-          if (recordingTimer.current) clearInterval(recordingTimer.current);
-          setIsRecording(false);
-          const text = "Large deep pothole right in front of the bus stop causing traffic delay and safety risk.";
-          setVoiceTranscript(text);
-          setReportDesc(prev => prev ? `${prev} ${text}` : text);
-          triggerAIEvaluation(reportTitle || selectedCategoryObj.name, text, selectedPhoto);
-        }
-      }, 150);
+const handleToggleVoice = () => {
+  if (isRecording) {
+    recognitionRef.current?.stop();
+    setIsRecording(false);
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Voice recognition not supported in this browser. Try Chrome.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-IN"; // or "hi-IN" for Hindi
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onresult = (event) => {
+    let transcript = "";
+    for (let i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
     }
+    setVoiceTranscript(transcript);
   };
 
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+    setIsRecording(false);
+  };
+
+  recognition.onend = () => {
+    setIsRecording(false);
+  };
+
+  recognitionRef.current = recognition;
+  recognition.start();
+  setIsRecording(true);
+};
   // Instant friendly AI Evaluation
   const triggerAIEvaluation = (
     title: string,
