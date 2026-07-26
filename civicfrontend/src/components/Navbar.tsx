@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Notification } from "../types";
 import { CITIES_DATA } from "../data/cityData";
+import logo from "../assets/1.jpg";
 
 interface NavbarProps {
   activeRole: string;
@@ -165,6 +166,7 @@ export default function Navbar({
             id="top-nav-logo-brand"
           >
             <img
+              src={logo}
               alt="Civic-IQ Logo"
               className="w-7 h-7 rounded-lg object-cover border border-slate-700/80 group-hover:border-blue-400/80 transition-colors"
               referrerPolicy="no-referrer"
