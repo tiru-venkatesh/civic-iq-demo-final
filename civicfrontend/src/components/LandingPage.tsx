@@ -484,7 +484,7 @@ export default function LandingPage({ onSelectRole }: LandingPageProps) {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <img
-                src="/src/assets/images/civiciq_logo_1783246559258.jpg"
+                src={logo}
                 alt="CivicIQ Logo"
                 className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
                 referrerPolicy="no-referrer"
