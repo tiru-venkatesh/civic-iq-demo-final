@@ -18,7 +18,7 @@ import {
   Building2,
   Heart
 } from "lucide-react";
-
+import logo from "../assets/1.jpg";
 interface FooterProps {
   activeRole: string;
   setActiveRole: (role: string) => void;
@@ -44,6 +44,7 @@ export default function Footer({ activeRole, setActiveRole }: FooterProps) {
           <div className="lg:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
                <img
+  src={logo}
   alt="Civic-IQ Logo"
   className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs"
 />
