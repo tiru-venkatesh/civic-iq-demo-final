@@ -26,7 +26,7 @@ import {
   Workflow
 } from "lucide-react";
 import AIChatbot from "./AIChatbot";
-
+import logo from "../assets/1.jpg";
 interface LandingPageProps {
   onSelectRole: (role: "admin" | "citizen" | "worker" | "docs") => void;
 }
@@ -51,7 +51,7 @@ export default function LandingPage({ onSelectRole }: LandingPageProps) {
           {/* Logo & Platform Name */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             <img
-              src="/src/assets/images/civiciq_logo_1783246559258.jpg"
+              src={logo}
               alt="CIVIC-AI Logo"
               className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
               referrerPolicy="no-referrer"
