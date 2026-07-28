@@ -66,6 +66,62 @@ function sanitize<T>(obj: T): T {
 // localStorage key used to persist the last-selected city across reloads/tab switches
 const CITY_STORAGE_KEY = "ciq_selected_city";
 
+// -----------------------------------------------------------------------
+// WORKER LOGIN PICKER — lightweight session-based "who's logging in" screen.
+// Mirrors the same pattern as AdminLogin (no real per-user auth, just a
+// session flag) so multiple field crew members can use the app on their own
+// phones and each see only their own assigned jobs, instead of everyone
+// silently being hardcoded to workers[0].
+// -----------------------------------------------------------------------
+function WorkerLoginPicker({
+  workers,
+  onSelectWorker,
+}: {
+  workers: FieldWorker[];
+  onSelectWorker: (id: string) => void;
+}) {
+  if (workers.length === 0) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-400 text-sm">
+        No field crew members found for this city yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+      <div>
+        <h3 className="text-sm font-bold text-slate-900">Who's logging in?</h3>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Select your field crew profile to view your assigned jobs.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {workers.map((w) => (
+          <button
+            key={w.id}
+            type="button"
+            onClick={() => onSelectWorker(w.id)}
+            className="flex items-center gap-3 p-3.5 border border-slate-200 rounded-xl hover:border-gov-blue hover:bg-slate-50 transition-all text-left cursor-pointer"
+          >
+            <img
+              src={w.avatar}
+              alt={w.name}
+              className="w-11 h-11 rounded-full object-cover border border-slate-200 shrink-0"
+            />
+            <div className="min-w-0">
+              <span className="text-sm font-bold text-slate-900 block truncate">{w.name}</span>
+              <span className="text-[11px] text-slate-500 block truncate">
+                {w.role} · {w.department}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   // City and Location States
   // Restored from localStorage on first load so the citizen/worker/admin views
@@ -290,6 +346,26 @@ export default function App() {
     sessionStorage.setItem("ciq_admin_auth", String(isAdminAuthenticated));
   }, [isAdminAuthenticated]);
 
+  // Field worker identity selection (session-based "who's logging in" — picks which
+  // worker's queue to view). Same lightweight pattern as admin auth above: no real
+  // per-user credential, just a session flag that unlocks the right worker context.
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(() => {
+    return sessionStorage.getItem("ciq_worker_id");
+  });
+
+  useEffect(() => {
+    if (selectedWorkerId) {
+      sessionStorage.setItem("ciq_worker_id", selectedWorkerId);
+    } else {
+      sessionStorage.removeItem("ciq_worker_id");
+    }
+  }, [selectedWorkerId]);
+
+  // Resolve the actual worker object. If the stored ID doesn't exist in this city's
+  // roster (e.g. after switching cities, where worker IDs are city-scoped), this comes
+  // back null and the picker re-shows instead of silently falling back to workers[0].
+  const activeWorker = workers.find((w) => w.id === selectedWorkerId) || null;
+
   // Clock ticks
   useEffect(() => {
     const timer = setInterval(() => {
@@ -369,7 +445,7 @@ export default function App() {
   };
 
   const handleAcceptJob = async (complaintId: string, workerId: string, workerName: string) => {
-    const targetWorker = workers.find((w) => w.id === workerId) || { name: workerName || "Rahul Patil" };
+    const targetWorker = workers.find((w) => w.id === workerId) || { name: workerName || "Unknown Technician" };
 
     try {
       await updateDoc(doc(db, complaintsCol(), complaintId), {
@@ -606,13 +682,13 @@ export default function App() {
                   <span className="font-bold text-slate-900 block text-xs">
                     {activeRole === "admin" && (isAdminAuthenticated ? "Admin Dashboard" : "Admin Login")}
                     {activeRole === "citizen" && "Citizen Portal"}
-                    {activeRole === "worker" && "Field Crew Dashboard"}
+                    {activeRole === "worker" && (activeWorker ? `Field Crew Dashboard — ${activeWorker.name}` : "Field Crew Login")}
                     {activeRole === "docs" && "Design System"}
                   </span>
                   <p className="text-[11px] text-slate-500 mt-0.5">
                     {activeRole === "admin" && (isAdminAuthenticated ? "Manage citizen complaints, dispatch field workers, and view ward repair estimates." : "Please enter your official employee ID and password to access the admin portal.")}
                     {activeRole === "citizen" && "Report issues via photo or voice, drop your location on the map, and get real-time AI updates."}
-                    {activeRole === "worker" && "Track assigned work orders, navigate to repair sites, upload completion photos, and update ticket statuses."}
+                    {activeRole === "worker" && (activeWorker ? "Track assigned work orders, navigate to repair sites, upload completion photos, and update ticket statuses." : "Select your field crew profile to continue.")}
                     {activeRole === "docs" && "View design standards, color palettes, typography guidelines, and accessibility benchmarks."}
                   </p>
                 </div>
@@ -625,6 +701,16 @@ export default function App() {
                 >
                   <Lock className="h-3.5 w-3.5" />
                   <span>Log Out</span>
+                </button>
+              )}
+
+              {activeRole === "worker" && activeWorker && (
+                <button
+                  onClick={() => setSelectedWorkerId(null)}
+                  className="px-3.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200 hover:border-red-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs shrink-0 self-end md:self-center cursor-pointer"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>Switch Worker</span>
                 </button>
               )}
             </div>
@@ -662,15 +748,18 @@ export default function App() {
               )}
 
               {activeRole === "worker" && (
-                <FieldWorkerApp
-                  complaints={complaints}
-                  worker={workers[0] || INITIAL_WORKERS[0]} // Defaults to Rahul Patil
-                  onAcceptJob={(complaintId) => {
-                    const activeWorker = workers[0] || INITIAL_WORKERS[0];
-                    handleAcceptJob(complaintId, activeWorker.id, activeWorker.name);
-                  }}
-                  onUpdateComplaintStatus={handleWorkerUpdateStatus}
-                />
+                activeWorker ? (
+                  <FieldWorkerApp
+                    complaints={complaints}
+                    worker={activeWorker}
+                    onAcceptJob={(complaintId) => {
+                      handleAcceptJob(complaintId, activeWorker.id, activeWorker.name);
+                    }}
+                    onUpdateComplaintStatus={handleWorkerUpdateStatus}
+                  />
+                ) : (
+                  <WorkerLoginPicker workers={workers} onSelectWorker={setSelectedWorkerId} />
+                )
               )}
 
               {activeRole === "docs" && (
