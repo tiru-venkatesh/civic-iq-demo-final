@@ -134,14 +134,20 @@ export default function FieldWorkerApp({
   }, [trafficLevel, selectedTask]);
 
   // Filter complaints
-  // 1. Available Jobs: Complaints that are Pending or Unassigned
+  // 1. Available Jobs: Complaints ADMIN has dispatched to THIS worker, awaiting their accept.
+  //    Requires status === "Assigned" (set by admin's dispatch action) AND assignedWorkerId
+  //    matches this worker — a complaint sitting at "Pending" is still in the admin queue and
+  //    must NOT appear here. This is what enforces "mandatory admin dispatch for all complaints".
   const availableJobs = complaints.filter(
-    (c) => c.status === "Pending" || (!c.assignedWorkerId && c.status !== "Resolved")
+    (c) => c.status === "Assigned" && c.assignedWorkerId === worker.id
   );
 
-  // 2. My Active Jobs: Assigned or Accepted or In Progress by this worker
+  // 2. My Active Jobs: Accepted or In Progress by this worker (already actioned, past the
+  //    "awaiting accept" stage — kept separate from availableJobs so a job doesn't show in both tabs)
   const myActiveJobs = complaints.filter(
-    (c) => (c.assignedWorkerId === worker.id || c.assignedWorkerName === worker.name) && c.status !== "Resolved"
+    (c) =>
+      (c.assignedWorkerId === worker.id || c.assignedWorkerName === worker.name) &&
+      (c.status === "Accepted" || c.status === "In Progress")
   );
 
   // 3. Resolved Jobs
@@ -358,10 +364,10 @@ export default function FieldWorkerApp({
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center justify-between text-xs text-amber-900 font-medium">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-amber-600 shrink-0 animate-pulse" />
-                <span className="text-[11px] font-bold">Unassigned Municipal Field Queue • Tap to inspect & accept</span>
+                <span className="text-[11px] font-bold">Admin-Dispatched Jobs • Tap to inspect & accept</span>
               </div>
               <span className="text-[10px] font-mono bg-amber-200/80 px-2 py-0.5 rounded-full font-bold">
-                Auto-Triage Active
+                Dispatch Queue
               </span>
             </div>
 
@@ -372,7 +378,7 @@ export default function FieldWorkerApp({
                 </div>
                 <h5 className="font-bold text-sm text-slate-800">Queue Clear!</h5>
                 <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                  No pending citizen complaints in your sector require immediate dispatch.
+                  No jobs dispatched to you right now. New work orders appear here once an admin assigns them to you.
                 </p>
               </div>
             ) : (
